@@ -31,7 +31,7 @@ Fixed a bug where actions like deleting or moving an email appeared to do nothin
 
 When a user clicks Delete (or Move, or any button that submits a form), the browser sends a POST request containing the selected messages. On a Mail-in-a-Box server, nginx was silently redirecting that request to a slightly different URL, and browsers responding to a redirect automatically switch from POST to GET — dropping the list of selected messages in the process. SquirrelMail received the request with no messages selected, so nothing was deleted.
 
-The root cause was that nginx strips the `/squirrelmail` prefix from the URL before handing it to PHP, causing SquirrelMail to build incorrect form action URLs. Since the Mail-in-a-Box nginx config is auto-generated and cannot be edited directly (it gets overwritten on updates), the fix lives in SquirrelMail itself — it detects the missing prefix and corrects it before any page logic runs.
+The root cause was that nginx strips the `/squirrelmail` prefix from the URL before handing it to PHP, causing SquirrelMail to build incorrect form action URLs. This affects any Mail-in-a-Box installation regardless of mail provider. Since the Mail-in-a-Box nginx config is auto-generated and cannot be edited directly (it gets overwritten on updates), the fix lives in SquirrelMail itself — it detects the missing prefix and corrects it before any page logic runs.
 
 ### `config/config.php`
 Preconfigured for Gmail:
