@@ -27,11 +27,11 @@ Serve SquirrelMail at `/squirrelmail/` via PHP-FPM. The `include/init.php` fix h
 ## Changes from upstream
 
 ### `include/init.php`
-Added a fix for nginx deployments using `fastcgi_split_path_info` (as Mail-in-a-Box does). nginx strips the location prefix (e.g. `/squirrelmail`) from `SCRIPT_NAME` before passing it to PHP-FPM. This caused SquirrelMail to compute `$base_uri = /` instead of `/squirrelmail/`, so all form `action` attributes pointed to `/src/*.php`. nginx then 302-redirected those bare paths, browsers converted POST to GET on the redirect, and `$_POST` data (selected message UIDs etc.) was silently lost — breaking delete, move, and any other POST-based action.
+Fixed a bug where actions like deleting or moving an email appeared to do nothing — the page would refresh but the message was still there.
 
-The fix (added after the `$base_uri` calculation) detects the mismatch by comparing `REQUEST_URI` against `SCRIPT_NAME`, extracts the missing prefix, and corrects `$base_uri`, `PHP_SELF`, and `SCRIPT_NAME` before any SquirrelMail code runs.
+When a user clicks Delete (or Move, or any button that submits a form), the browser sends a POST request containing the selected messages. On a Mail-in-a-Box server, nginx was silently redirecting that request to a slightly different URL, and browsers responding to a redirect automatically switch from POST to GET — dropping the list of selected messages in the process. SquirrelMail received the request with no messages selected, so nothing was deleted.
 
-The auto-generated Mail-in-a-Box nginx config (`/etc/nginx/conf.d/local.conf`) cannot be edited directly as it is regenerated on updates, so the fix lives in SquirrelMail instead.
+The root cause was that nginx strips the `/squirrelmail` prefix from the URL before handing it to PHP, causing SquirrelMail to build incorrect form action URLs. Since the Mail-in-a-Box nginx config is auto-generated and cannot be edited directly (it gets overwritten on updates), the fix lives in SquirrelMail itself — it detects the missing prefix and corrects it before any page logic runs.
 
 ### `config/config.php`
 Preconfigured for Gmail:
