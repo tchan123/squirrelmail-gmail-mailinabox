@@ -24,6 +24,22 @@ Users log in with their **Gmail address** as the username and a **Gmail App Pass
 
 Serve SquirrelMail at `/squirrelmail/` via PHP-FPM. The `include/init.php` fix handles the `SCRIPT_NAME` prefix issue automatically — no nginx config changes needed.
 
+## Changes from upstream
+
+### `include/init.php`
+Added a fix for nginx deployments using `fastcgi_split_path_info` (as Mail-in-a-Box does). nginx strips the location prefix (e.g. `/squirrelmail`) from `SCRIPT_NAME` before passing it to PHP-FPM. This caused SquirrelMail to compute `$base_uri = /` instead of `/squirrelmail/`, so all form `action` attributes pointed to `/src/*.php`. nginx then 302-redirected those bare paths, browsers converted POST to GET on the redirect, and `$_POST` data (selected message UIDs etc.) was silently lost — breaking delete, move, and any other POST-based action.
+
+The fix (added after the `$base_uri` calculation) detects the mismatch by comparing `REQUEST_URI` against `SCRIPT_NAME`, extracts the missing prefix, and corrects `$base_uri`, `PHP_SELF`, and `SCRIPT_NAME` before any SquirrelMail code runs.
+
+The auto-generated Mail-in-a-Box nginx config (`/etc/nginx/conf.d/local.conf`) cannot be edited directly as it is regenerated on updates, so the fix lives in SquirrelMail instead.
+
+### `config/config.php`
+Preconfigured for Gmail:
+- IMAP: `imap.gmail.com:993`, TLS enabled, server type `gmail`
+- SMTP: `smtp.gmail.com:587`, STARTTLS (`use_smtp_tls = 2`), auth mechanism `login`
+- Folder mappings: Trash → `[Gmail]/Trash`, Sent → `[Gmail]/Sent Mail`, Drafts → `[Gmail]/Drafts`
+- User data paths set to Mail-in-a-Box standard: `/home/user-data/squirrelmail/`
+
 ---
 
 # SqirrelMail 1.5.2
