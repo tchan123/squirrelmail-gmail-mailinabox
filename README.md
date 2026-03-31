@@ -1,3 +1,31 @@
+# SquirrelMail for Gmail + Mail-in-a-Box
+
+A custom SquirrelMail build preconfigured for Gmail IMAP/SMTP on a [Mail-in-a-Box](https://mailinabox.email/) server.
+
+## What's included
+
+- Gmail IMAP (`imap.gmail.com:993`, TLS) and SMTP (`smtp.gmail.com:587`, STARTTLS) preconfigured
+- Folder mappings for Gmail's special folders (Trash, Sent, Drafts)
+- Fix for nginx `fastcgi_split_path_info` stripping the `/squirrelmail` prefix, which caused POST→GET redirects and silently broke delete, move, and other actions
+- User data stored at `/home/user-data/squirrelmail/` (standard Mail-in-a-Box layout)
+
+## Per-instance configuration
+
+After cloning to `/usr/local/lib/squirrelmail/`, edit `config/config.php` and update:
+
+| Setting | Variable | Example |
+|---|---|---|
+| Your domain | `$domain` | `example.com` |
+| Organization name | `$org_name` | `Webmail` |
+
+Users log in with their **Gmail address** as the username and a **Gmail App Password** (not their Google account password). Generate one at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+
+## nginx
+
+Serve SquirrelMail at `/squirrelmail/` via PHP-FPM. The `include/init.php` fix handles the `SCRIPT_NAME` prefix issue automatically — no nginx config changes needed.
+
+---
+
 # SqirrelMail 1.5.2
 
 A version of SquirrelMail for PHP 7.0 and above with additional changes for compatibility or security reasons.
